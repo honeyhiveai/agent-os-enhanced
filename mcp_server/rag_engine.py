@@ -467,17 +467,15 @@ class RAGEngine:
     def _clean_cache(self) -> None:
         """Remove expired cache entries.
 
-        Iterates through cache and deletes entries that have exceeded
-        the TTL threshold.
+        Filters cache to retain only non-expired entries using dict comprehension
+        for improved performance (avoids intermediate list creation).
         """
         current_time = time.time()
-        expired_keys = [
-            key
-            for key, (_, timestamp) in self._query_cache.items()
-            if current_time - timestamp > self.cache_ttl_seconds
-        ]
-        for key in expired_keys:
-            del self._query_cache[key]
+        self._query_cache = {
+            key: value
+            for key, value in self._query_cache.items()
+            if current_time - value[1] <= self.cache_ttl_seconds
+        }
 
     def health_check(self) -> Dict[str, Any]:
         """
